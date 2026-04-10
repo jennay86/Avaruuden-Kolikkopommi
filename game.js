@@ -6,6 +6,8 @@ let vx = 0;
 let vy = 0;
 let startAnim = 0;
 
+const BLUE_BIAS = 210;
+
 let score = 0;
 let highScores = [];
 let madeTop5 = false;
@@ -17,6 +19,7 @@ let gameState = "start";
 
 let coinSound, explosionSound, gameOverSound;
 let backgroundMusic, gameMusic, tickingSound, warningSound;
+let boosterSound;
 
 let booster = null;
 let boosterActive = false;
@@ -30,10 +33,13 @@ let touchX = 0;
 let touchY = 0;
 let isTouching = false;
 
-let startButton, restartButton;
+let startButton, restartButton, homeButton;
 let shake = 0;
 let coinPop = 0;
 let floatingTexts = [];
+
+let bgHue = 200;
+let bgTargetHue = 200;
 
 function preload() {
   coinSound = loadSound('assets/coin.mp3');
@@ -43,6 +49,7 @@ function preload() {
   gameMusic = loadSound('assets/music.mp3');
   tickingSound = loadSound('assets/ticking.mp3');
   warningSound = loadSound('assets/warning.mp3');
+  boosterSound = loadSound('assets/booster.mp3');
 }
 
 function setup() {
@@ -52,6 +59,7 @@ function setup() {
   coinSound.setVolume(0.25);
   explosionSound.setVolume(0.25);
   gameOverSound.setVolume(0.4);
+  boosterSound.setVolume(0.5);
 
   backgroundMusic.setVolume(0.3);
   gameMusic.setVolume(0.6);
@@ -81,6 +89,24 @@ function setup() {
   restartButton.size(160, 45);
   restartButton.mousePressed(startGame);
   restartButton.hide();
+
+  
+homeButton = createButton(" Alkuun");
+homeButton.size(140, 36);
+homeButton.mousePressed(goToStart);
+
+
+homeButton.style('text-align', 'center');
+homeButton.style('line-height', '36px'); // sama kuin napin korkeus
+homeButton.style('padding', '0');
+
+
+homeButton.style('background-color', '#223344');
+homeButton.style('color', '#ffffff');
+homeButton.style('border-radius', '6px');
+
+homeButton.hide();
+
 
   highScores = getItem('highScores') || [];
 }
@@ -183,26 +209,50 @@ function startGame() {
   stopSound(warningSound);
 }
 
+function goToStart() {
+  gameState = "start";
+
+  // nollaa animaatiot ja efektit
+  startAnim = 0;
+  gameOverAnim = 0;
+  gameOverShake = 0;
+
+  stopSound(gameMusic);
+  stopSound(tickingSound);
+  stopSound(warningSound);
+  playLoop(backgroundMusic, 0.2);
+
+  restartButton.hide();
+  homeButton.hide();
+
+  startButton.show();
+}
+
 
 function drawBackground() {
 
+  push(); // 🔒 eristää colorModen
+  colorMode(HSB, 360, 100, 100, 100);
+
   for (let y = 0; y < height; y++) {
-  let c = map(y, 0, height, 20, 60);
-  stroke(10, 10, c);
-  line(0, y, width, y);
-}
-noStroke();
+    let brightness = map(y, 0, height, 8, 35);
+    
+let finalHue = lerp(bgHue, BLUE_BIAS, 0.35);
+stroke(finalHue, 35, brightness);
 
-  for (let s of stars) {
+    line(0, y, width, y);
+  }
 
-  // ✨ hyvin pehmeä hehku (vain yksi kerros)
-  fill(255, 255, 255, 15);
-  ellipse(s.x, s.y, s.size * 2);
-
-  // ⭐ tähti
-  fill(255, 255, 255, 180);
+  pop(); // 🔓 paluu normaaliin RGB-tilaan
   noStroke();
-  ellipse(s.x, s.y, s.size);
+
+  // tähdet pysyy RGB:nä (kuten ennen)
+  for (let s of stars) {
+    fill(255, 255, 255, 15);
+    ellipse(s.x, s.y, s.size * 2);
+
+    fill(255, 255, 255, 180);
+    ellipse(s.x, s.y, s.size);
 
     s.y += s.speed;
     if (s.y > height) {
@@ -295,6 +345,11 @@ push();
 
 
   drawBackground();
+
+if (gameState === "start" || gameState === "play") {
+  fill(0, 70); // ← säädä välillä 60–90 tarpeen mukaan
+  rect(0, 0, width, height);
+}
 
   if (gameState === "start" || gameState === "gameover") {
     playLoop(backgroundMusic, 0.2);
@@ -405,8 +460,12 @@ pop();
   gameOverShake = 8; // tärähdyksen voimakkuus
   }
 
-    fill(0, 100);
-    rect(0, 0, width, height);
+    
+push();
+fill(0, 180);
+rect(0, 0, width, height);
+pop();
+
 
     fill(255);
     textAlign(CENTER, CENTER);
@@ -471,6 +530,18 @@ restartButton.position(
   afterTop5Y + (madeTop5 ? 70 : 40)
 );
 restartButton.show();
+
+
+let bw = homeButton.elt.offsetWidth;
+let homeOffset = 30;
+
+homeButton.position(
+  width / 2 - bw / 2,          // ✅ keskitys sivusuunnassa
+  restartButton.position().y + 60
+);
+homeButton.show();
+
+
 
 return;
 
@@ -624,6 +695,8 @@ if (d < 20) {
 
   if (dist(player.x, player.y, coin.x, coin.y) < 20) {
 
+    bgTargetHue = (bgTargetHue + random(40, 100)) % 360;
+
     coinPop = 18;
 
     if (comboTimer > 0) {
@@ -676,6 +749,12 @@ if (comboMultiplier > 1) {
     boosterTimer = 5;
     booster = null;
     boosterCooldown = 5;
+
+    
+if (boosterSound) {
+    boosterSound.play();
+  }
+
   }
 
   if (boosterActive) {
@@ -756,6 +835,8 @@ pop();
 
 shake *= 0.9;
 coinPop *= 0.8;
+
+bgHue = lerp(bgHue, bgTargetHue, 0.05);
 
 // ✨ pehmeä tumma kerros (visuaalinen fiilis)
 fill(0, 40);
