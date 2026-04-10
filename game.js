@@ -8,6 +8,19 @@ let startAnim = 0;
 
 const BLUE_BIAS = 210;
 
+let useScale = true;
+
+
+const BASE_WIDTH = 1280;
+const BASE_HEIGHT = 720; // 16:9, moderni
+let scaleFactor = 1;
+
+let audioUnlocked = false;
+
+
+let deadZone = 25; // kosketusohjauksen kuollut alue
+
+
 let score = 0;
 let highScores = [];
 let madeTop5 = false;
@@ -38,8 +51,59 @@ let shake = 0;
 let coinPop = 0;
 let floatingTexts = [];
 
+
+let bgColor;
+let bgTargetColor;
+
 let bgHue = 200;
 let bgTargetHue = 200;
+
+
+function updateScale() {
+  scaleFactor = min(
+    windowWidth / BASE_WIDTH,
+    windowHeight / BASE_HEIGHT
+  );
+  uuseScale = min(windowWidth / BASE_WIDTH, windowHeight / BASE_HEIGHT) < 0.95;
+}
+
+
+function sx(x) {
+  return x / scaleFactor;
+}
+
+function sy(y) {
+  return y / scaleFactor;
+}
+
+
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  updateScale();
+}
+
+
+function tryAutoplayMusic() {
+  const ctx = getAudioContext();
+
+  // Jos selain sallii äänen heti
+  if (ctx.state === 'running') {
+    playLoop(backgroundMusic, 0.2);
+    audioUnlocked = true;
+  }
+}
+
+
+
+function unlockAudio() {
+  if (!audioUnlocked) {
+    userStartAudio();
+    playLoop(backgroundMusic, 0.2);
+    audioUnlocked = true;
+  }
+}
+
 
 function preload() {
   coinSound = loadSound('assets/coin.mp3');
@@ -53,8 +117,15 @@ function preload() {
 }
 
 function setup() {
+  
   createCanvas(windowWidth, windowHeight);
+  updateScale();
   textFont('Orbitron');
+  pixelDensity(1);
+
+  
+bgColor = color(10, 15, 40);        // alkuperäinen tumma sininen
+bgTargetColor = bgColor;
 
   coinSound.setVolume(0.25);
   explosionSound.setVolume(0.25);
@@ -109,6 +180,9 @@ homeButton.hide();
 
 
   highScores = getItem('highScores') || [];
+
+tryAutoplayMusic()
+  
 }
 
 
@@ -153,17 +227,17 @@ function stopSound(sound) {
 
 function touchStarted() {
   if (gameState === "play") {
-    touchX = mouseX;
-    touchY = mouseY;
+    touchX = sx(mouseX);
+    touchY = sy(mouseY);
     isTouching = true;
   }
-  return false; // estää oletuskäyttäytymisen
+  return false;
 }
 
 function touchMoved() {
   if (gameState === "play" && isTouching) {
-    touchX = mouseX;
-    touchY = mouseY;
+    touchX = sx(mouseX);
+    touchY = sy(mouseY);
   }
   return false;
 }
@@ -228,27 +302,36 @@ function goToStart() {
   startButton.show();
 }
 
-
 function drawBackground() {
-
-  push(); // 🔒 eristää colorModen
-  colorMode(HSB, 360, 100, 100, 100);
-
-  for (let y = 0; y < height; y++) {
-    let brightness = map(y, 0, height, 8, 35);
-    
-let finalHue = lerp(bgHue, BLUE_BIAS, 0.35);
-stroke(finalHue, 35, brightness);
-
-    line(0, y, width, y);
-  }
-
-  pop(); // 🔓 paluu normaaliin RGB-tilaan
   noStroke();
 
-  // tähdet pysyy RGB:nä (kuten ennen)
+  for (let y = 0; y < height; y++) {
+    let t = y / height;
+
+    // kirkkausgradientti (sama kuin ennen)
+    let c = lerp(20, 55, t);
+
+    
+let r = red(bgColor);
+let g = green(bgColor);
+let b = blue(bgColor);
+
+// tummennetaan alaspäin
+let shade = lerp(0.4, 1.0, y / height);
+
+fill(
+  r * shade,
+  g * shade,
+  b * shade
+);
+
+
+    rect(0, y, width, 1);
+  }
+
+  // tähdet
   for (let s of stars) {
-    fill(255, 255, 255, 15);
+    fill(255, 255, 255, 20);
     ellipse(s.x, s.y, s.size * 2);
 
     fill(255, 255, 255, 180);
@@ -336,18 +419,34 @@ function drawBooster() {
   pop();
 }
 
+
+function mousePressed() {
+  if (gameState === "start") {
+    unlockAudio();
+  }
+}
+
 function draw() {
 
-push();
+  
+// ✅ TAUSTA ENSIN – EI SKAALAUSTA
+  drawBackground();
+
+  push();
+
   if (gameState === "play") {
     translate(random(-shake, shake), random(-shake, shake));
   }
 
+  // ✅ SKAALAUS VASTA TÄNNE
+  
+if (useScale) {
+  scale(scaleFactor);
+}
 
-  drawBackground();
 
 if (gameState === "start" || gameState === "play") {
-  fill(0, 70); // ← säädä välillä 60–90 tarpeen mukaan
+  fill(0, 35); // ← säädä välillä 60–90 tarpeen mukaan
   rect(0, 0, width, height);
 }
 
@@ -548,10 +647,44 @@ return;
   }
 
   let speed = 4 + (boosterActive ? 2 : 0);
-  if (keyIsDown(LEFT_ARROW) || (isTouching && touchX < player.x - 20)) vx -= 0.5;
-  if (keyIsDown(RIGHT_ARROW) || (isTouching && touchX > player.x + 20)) vx += 0.5;
-  if (keyIsDown(UP_ARROW) || (isTouching && touchY < player.y - 20)) vy -= 0.5;
-  if (keyIsDown(DOWN_ARROW) || (isTouching && touchY > player.y + 20)) vy += 0.5;
+  if (keyIsDown(LEFT_ARROW) ||
+    (isTouching && touchX < player.x - deadZone)) {
+  vx -= 0.5;
+}
+
+if (keyIsDown(RIGHT_ARROW) ||
+    (isTouching && touchX > player.x + deadZone)) {
+  vx += 0.5;
+}
+
+if (keyIsDown(UP_ARROW) ||
+    (isTouching && touchY < player.y - deadZone)) {
+  vy -= 0.5;
+}
+
+if (keyIsDown(DOWN_ARROW) ||
+    (isTouching && touchY > player.y + deadZone)) {
+  vy += 0.5;
+}
+
+// 🖱️ Hiiriohjaus (vain jos hiiren nappia painetaan)
+if (!isTouching && mouseIsPressed) {
+  let mx = sx(mouseX);
+  let my = sy(mouseY);
+
+  let dx = mx - player.x;
+  let dy = my - player.y;
+
+  let d = dist(mx, my, player.x, player.y);
+
+  if (d > deadZone) {
+    dx = constrain(dx, -100, 100);
+    dy = constrain(dy, -100, 100);
+
+    vx += dx * 0.01;
+    vy += dy * 0.01;
+  }
+}
 
   player.x += vx;
   player.y += vy;
@@ -694,6 +827,15 @@ if (d < 20) {
 }
 
   if (dist(player.x, player.y, coin.x, coin.y) < 20) {
+
+bgTargetColor = color(
+  random(20, 80),     // R
+  random(20, 80),    // G
+  random(80, 160)     // B (painotus siniseen)
+  
+);
+
+bgColor = bgTargetColor;
 
     bgTargetHue = (bgTargetHue + random(40, 100)) % 360;
 
@@ -841,5 +983,16 @@ bgHue = lerp(bgHue, bgTargetHue, 0.05);
 // ✨ pehmeä tumma kerros (visuaalinen fiilis)
 fill(0, 40);
 rect(0, 0, width, height);
+
+
+noStroke();
+for (let i = 0; i < 2000; i++) {
+  fill(0, random(10));
+  rect(random(width), random(height), 1, 1);
+}
+
+
+pop();
+
 
 }
