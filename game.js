@@ -64,7 +64,7 @@ function updateScale() {
     windowWidth / BASE_WIDTH,
     windowHeight / BASE_HEIGHT
   );
-  uuseScale = min(windowWidth / BASE_WIDTH, windowHeight / BASE_HEIGHT) < 0.95;
+  useScale = min(windowWidth / BASE_WIDTH, windowHeight / BASE_HEIGHT) < 0.95;
 }
 
 
