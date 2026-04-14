@@ -173,7 +173,10 @@ bgColor = color(10, 15, 40);        // alkuperäinen tumma sininen
       x: random(width),
       y: random(height),
       size: random(1, 3),
-      speed: random(0.2, 1)
+      speed: random(0.2, 1),
+      drift: random(-0.14, 0.14),
+      twinkle: random(0.03, 0.09),
+      phase: random(TWO_PI)
     });
   }
   
@@ -348,21 +351,31 @@ fill(
 
     rect(0, y, width, 1);
   }
-
   // tähdet
   for (let s of stars) {
-    fill(255, 255, 255, 20);
+    const twinkle = 120 + sin(frameCount * s.twinkle + s.phase) * 90;
+
+    fill(255, 255, 255, 18 + twinkle * 0.12);
     ellipse(s.x, s.y, s.size * 2);
 
-    fill(255, 255, 255, 180);
+    fill(210, 240, 255, twinkle);
     ellipse(s.x, s.y, s.size);
 
+    s.x += s.drift;
     s.y += s.speed;
-    if (s.y > height) {
+
+    if (s.x > width + 4) s.x = -4;
+    if (s.x < -4) s.x = width + 4;
+
+    if (s.y > height + 3) {
       s.y = 0;
       s.x = random(width);
     }
   }
+
+  // hillitty tumma viimeistelykerros kontrastin vuoksi
+  fill(0, 0, 0, 28);
+  rect(0, 0, width, height);
 }
 
 function glow(x, y, size, col) {
@@ -758,8 +771,21 @@ if (pointerActive) {
 
   let playerSize = 25 + (boosterActive ? 5 : 0) + sin(frameCount * 0.1) * 2;
   glow(player.x, player.y, 20, color(0, 200, 255));
-  fill(120, 220, 255);
+
+  // Minimalistinen 3D: tumma reunus + pieni highlight
+  stroke(4, 12, 22, 240);
+  strokeWeight(3.6);
+  fill(118, 214, 248);
   ellipse(player.x, player.y, playerSize);
+
+  noStroke();
+  fill(255, 255, 255, 175);
+  ellipse(
+    player.x - playerSize * 0.2,
+    player.y - playerSize * 0.2,
+    playerSize * 0.17,
+    playerSize * 0.17
+  );
 
   // ✨ hehku
 glow(coin.x, coin.y, 15, color(255, 200, 0));
@@ -828,14 +854,18 @@ pop();
     // glow
 glow(b.pos.x, b.pos.y, 20, color(255, 50, 50));
 
+const bombSize = 28;
+const bombHitRadius = 22;
+const bombNearMissRadius = 44;
+
 // pommin runko
-fill(30);
-ellipse(b.pos.x, b.pos.y, 24);
+fill(18);
+ellipse(b.pos.x, b.pos.y, bombSize);
 
 // punainen ydin (pulssaa)
 let pulse = sin(frameCount * 0.2) * 3;
 fill(255, 50, 50);
-ellipse(b.pos.x, b.pos.y, 10 + pulse);
+ellipse(b.pos.x, b.pos.y, 12 + pulse);
 
 // pieni kirkas piste keskelle
 fill(255, 150, 150);
@@ -844,7 +874,7 @@ ellipse(b.pos.x, b.pos.y, 4);
 
     let d = dist(player.x, player.y, b.pos.x, b.pos.y);
 
-if (d < 40 && d > 20 && !b.nearMissed) {
+  if (d < bombNearMissRadius && d > bombHitRadius && !b.nearMissed) {
   score += 5;
 
   let fx = player.x;
@@ -861,7 +891,7 @@ if (d < 40 && d > 20 && !b.nearMissed) {
 }
     
 
-if (d < 20) {
+if (d < bombHitRadius) {
   if (!boosterActive) {
     shake = 10;
     hitCount++;
