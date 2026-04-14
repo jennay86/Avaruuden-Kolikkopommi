@@ -6,8 +6,6 @@ let vx = 0;
 let vy = 0;
 let startAnim = 0;
 
-const BLUE_BIAS = 210;
-
 let useScale = true;
 
 
@@ -53,10 +51,6 @@ let floatingTexts = [];
 
 
 let bgColor;
-let bgTargetColor;
-
-let bgHue = 200;
-let bgTargetHue = 200;
 
 
 function updateScale() {
@@ -125,7 +119,6 @@ function setup() {
 
   
 bgColor = color(10, 15, 40);        // alkuperäinen tumma sininen
-bgTargetColor = bgColor;
 
   coinSound.setVolume(0.25);
   explosionSound.setVolume(0.25);
@@ -150,31 +143,21 @@ bgTargetColor = bgColor;
     });
   }
   
-  startButton = createButton(" Aloita peli");
+  startButton = createButton("Aloita peli");
   startButton.position(width/2 - 80, height/2 + 20);
   startButton.size(160, 45);
   startButton.mousePressed(startGame);
 
-  restartButton = createButton(" Uudelleen");
+  restartButton = createButton("Uudelleen");
   restartButton.position(width/2 - 80, height/2 + 180);
   restartButton.size(160, 45);
   restartButton.mousePressed(startGame);
   restartButton.hide();
 
   
-homeButton = createButton(" Alkuun");
-homeButton.size(140, 36);
+homeButton = createButton("Alkuun");
+homeButton.size(160, 45);
 homeButton.mousePressed(goToStart);
-
-
-homeButton.style('text-align', 'center');
-homeButton.style('line-height', '36px'); // sama kuin napin korkeus
-homeButton.style('padding', '0');
-
-
-homeButton.style('background-color', '#223344');
-homeButton.style('color', '#ffffff');
-homeButton.style('border-radius', '6px');
 
 homeButton.hide();
 
@@ -275,6 +258,7 @@ function startGame() {
 
   startButton.hide();
   restartButton.hide();
+  homeButton.hide();
 
   userStartAudio();
   stopSound(backgroundMusic);
@@ -306,12 +290,6 @@ function drawBackground() {
   noStroke();
 
   for (let y = 0; y < height; y++) {
-    let t = y / height;
-
-    // kirkkausgradientti (sama kuin ennen)
-    let c = lerp(20, 55, t);
-
-    
 let r = red(bgColor);
 let g = green(bgColor);
 let b = blue(bgColor);
@@ -442,12 +420,6 @@ function draw() {
   
 if (useScale) {
   scale(scaleFactor);
-}
-
-
-if (gameState === "start" || gameState === "play") {
-  fill(0, 35); // ← säädä välillä 60–90 tarpeen mukaan
-  rect(0, 0, width, height);
 }
 
   if (gameState === "start" || gameState === "gameover") {
@@ -630,12 +602,8 @@ restartButton.position(
 );
 restartButton.show();
 
-
-let bw = homeButton.elt.offsetWidth;
-let homeOffset = 30;
-
 homeButton.position(
-  width / 2 - bw / 2,          // ✅ keskitys sivusuunnassa
+  width / 2 - 80,
   restartButton.position().y + 60
 );
 homeButton.show();
@@ -646,7 +614,6 @@ return;
 
   }
 
-  let speed = 4 + (boosterActive ? 2 : 0);
   if (keyIsDown(LEFT_ARROW) ||
     (isTouching && touchX < player.x - deadZone)) {
   vx -= 0.5;
@@ -737,7 +704,6 @@ pop();
     drawBooster();
   }
 
-  let bombSpeedMultiplier = 1;
   let desiredBombCount = 4 + floor((60 - time) / 5);
   while (bombs.length < desiredBombCount) {
     bombs.push({
@@ -828,16 +794,12 @@ if (d < 20) {
 
   if (dist(player.x, player.y, coin.x, coin.y) < 20) {
 
-bgTargetColor = color(
+bgColor = color(
   random(20, 80),     // R
   random(20, 80),    // G
   random(80, 160)     // B (painotus siniseen)
   
 );
-
-bgColor = bgTargetColor;
-
-    bgTargetHue = (bgTargetHue + random(40, 100)) % 360;
 
     coinPop = 18;
 
@@ -977,19 +939,6 @@ pop();
 
 shake *= 0.9;
 coinPop *= 0.8;
-
-bgHue = lerp(bgHue, bgTargetHue, 0.05);
-
-// ✨ pehmeä tumma kerros (visuaalinen fiilis)
-fill(0, 40);
-rect(0, 0, width, height);
-
-
-noStroke();
-for (let i = 0; i < 2000; i++) {
-  fill(0, random(10));
-  rect(random(width), random(height), 1, 1);
-}
 
 
 pop();

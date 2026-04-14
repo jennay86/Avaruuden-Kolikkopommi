@@ -4,6 +4,7 @@ html, body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  overscroll-behavior: none;
 
   /* 🌈 tumma gradienttitausta */
   background: radial-gradient(circle at top, #1a1a2e, #0f0f1a);
@@ -12,9 +13,22 @@ html, body {
   font-family: 'Orbitron', sans-serif;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+  touch-action: manipulation;
+}
+
 /* 🎮 canvas koko ruutuun */
 canvas {
   display: block;
+  width: 100vw !important;
+  height: 100vh !important;
+  touch-action: none;
 }
 
 /* 🔘 napit (Aloita / Restart) */
@@ -31,6 +45,9 @@ button {
   padding: 10px 20px;
 
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 44px;
 
   backdrop-filter: blur(6px);
 
@@ -48,4 +65,11 @@ button:hover {
 /* 🔘 painallus efekti */
 button:active {
   transform: scale(0.95);
+}
+
+@media (max-width: 640px) {
+  button {
+    font-size: 14px;
+    padding: 10px 16px;
+  }
 }
