@@ -489,17 +489,22 @@ if (useScale) {
     restartButton.hide();
     homeButton.hide();
 
+    const compactStartLayout = width < 900 || height < 700;
+    const titleSize = constrain(floor(width * 0.06), 28, 42);
+    const helpSize = constrain(floor(width * 0.028), 14, 22);
+    const helpWidth = min(width * 0.86, 760);
+
     fill(255);
     textAlign(CENTER, CENTER);
-    textSize(42);
+    textSize(titleSize);
     // 🚀 avaruus-aloitusanimaatio
 startAnim = min(startAnim + 0.012, 1);
 
 // easing (pehmeä loppu)
 let t = 1 - pow(1 - startAnim, 3);
 
-// sijainti (ylhäältä hieman ohi)
-let titleY = lerp(height / 2 - 260, height / 2 - 120, t);
+// sijainti adaptiivisesti eri näyttöihin
+let titleY = lerp(height * 0.06, compactStartLayout ? height * 0.18 : height * 0.24, t);
 
 // skaala (kaukaa → paikalle)
 let titleScale = lerp(2.5, 1.0, t);
@@ -516,31 +521,36 @@ rotate(rotation);
 scale(titleScale);
 
 textAlign(CENTER, CENTER);
-textSize(42);
+textSize(titleSize);
 fill(255, alpha);
 text("Avaruuden Kolikkopommi", 0, 0);
 
 pop();
 
 
-    
-textSize(22);
+textSize(helpSize);
+textLeading(helpSize * 1.35);
 fill(180, 220, 255);
+textAlign(CENTER, TOP);
 
 text(
   "Kerää kolikoita nuolinäppäimillä ja vältä pommeja. "
 + "Saat boostereista lisää tehoa ja suojan.\n"
 + "Pommien läheltä saat bonuspisteitä.",
-  width/2, height/2 - 50
+  width / 2 - helpWidth / 2,
+  compactStartLayout ? height * 0.33 : height * 0.36,
+  helpWidth,
+  compactStartLayout ? height * 0.24 : height * 0.2
 );
 
 
     // ✨ hehku
-glow(width/2, height/2 + 110, 15, color(255, 200, 0));
+const coinPreviewY = compactStartLayout ? height * 0.6 : height / 2 + 110;
+glow(width/2, coinPreviewY, 15, color(255, 200, 0));
 
 // 🪙 sama kolikko kuin pelissä
 push();
-translate(width/2, height/2 + 110);
+translate(width/2, coinPreviewY);
 
 let w = 26 + sin(frameCount * 0.2) * 4;
 
