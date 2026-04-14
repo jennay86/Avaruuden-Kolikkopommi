@@ -17,7 +17,7 @@ let scaleFactor = 1;
 let audioUnlocked = false;
 
 
-let deadZone = 25; // kosketusohjauksen kuollut alue
+let deadZone = 18; // kosketusohjauksen kuollut alue
 
 
 let score = 0;
@@ -493,6 +493,9 @@ if (useScale) {
     const titleSize = constrain(floor(width * 0.06), 28, 42);
     const helpSize = constrain(floor(width * 0.027), 12, 20);
     const helpWidth = min(width * 0.86, 760);
+    const titleText = compactStartLayout
+      ? "Avaruuden\nKolikkopommi"
+      : "Avaruuden Kolikkopommi";
 
     fill(255);
     textAlign(CENTER, CENTER);
@@ -522,8 +525,9 @@ scale(titleScale);
 
 textAlign(CENTER, CENTER);
 textSize(titleSize);
+textLeading(titleSize * 0.95);
 fill(255, alpha);
-text("Avaruuden Kolikkopommi", 0, 0);
+text(titleText, 0, 0);
 
 pop();
 
@@ -534,9 +538,10 @@ fill(180, 220, 255);
 textAlign(CENTER, TOP);
 
 text(
-  "Kerää kolikoita nuolinäppäimillä ja vältä pommeja. "
-+ "Saat boostereista lisää tehoa ja suojan.\n"
-+ "Pommien läheltä saat bonuspisteitä.",
+  "Kerää kolikoita ja vältä pommeja.\n"
++ "Kolikoiden comboista ja pommien läheltä\n"
++ "saat bonuspisteitä.\n"
++ "Boostereista saat lisää tehoa ja suojaa.\n",
   width / 2 - helpWidth / 2,
   compactStartLayout ? height * 0.31 : height * 0.35,
   helpWidth
@@ -544,7 +549,7 @@ text(
 
 
     // ✨ hehku
-const coinPreviewY = compactStartLayout ? height * 0.6 : height / 2 + 110;
+const coinPreviewY = compactStartLayout ? height * 0.56 : height / 2 + 110;
 glow(width/2, coinPreviewY, 15, color(255, 200, 0));
 
 const startButtonY = min(height - 70, coinPreviewY + 55);
@@ -652,12 +657,17 @@ for (let i = 0; i < highScores.length; i++) {
 
 // mihin Top 5 päättyy
 let afterTop5Y = baseY + 115 + highScores.length * 26;
+const compactGameOverLayout = width < 900 || height < 700;
 
 // 4️⃣ PÄÄSIT TOP 5 -LISTALLE
 if (madeTop5) {
   textSize(24);
   fill(255, 220, 150);
-  text("🎉 Pääsit Top 5 -listalle!", width / 2, afterTop5Y + 25);
+  text(
+    "🎉 Pääsit Top 5 -listalle!",
+    width / 2,
+    afterTop5Y + (compactGameOverLayout ? 10 : 25)
+  );
 }
 
 // 5️⃣ UUSINTA-PAINIKE
@@ -680,53 +690,64 @@ return;
   restartButton.hide();
   homeButton.hide();
 
-  if (keyIsDown(LEFT_ARROW) ||
-    (isTouching && touchX < player.x - deadZone)) {
+  if (keyIsDown(LEFT_ARROW)) {
   vx -= 0.5;
 }
 
-if (keyIsDown(RIGHT_ARROW) ||
-    (isTouching && touchX > player.x + deadZone)) {
+if (keyIsDown(RIGHT_ARROW)) {
   vx += 0.5;
 }
 
-if (keyIsDown(UP_ARROW) ||
-    (isTouching && touchY < player.y - deadZone)) {
+if (keyIsDown(UP_ARROW)) {
   vy -= 0.5;
 }
 
-if (keyIsDown(DOWN_ARROW) ||
-    (isTouching && touchY > player.y + deadZone)) {
+if (keyIsDown(DOWN_ARROW)) {
   vy += 0.5;
 }
 
-// 🖱️ Hiiriohjaus (vain jos hiiren nappia painetaan)
-if (!isTouching && mouseIsPressed) {
-  let mx = sx(mouseX);
-  let my = sy(mouseY);
+const pointerActive = isTouching || mouseIsPressed;
 
-  let dx = mx - player.x;
-  let dy = my - player.y;
-
-  let d = dist(mx, my, player.x, player.y);
+if (pointerActive) {
+  const px = isTouching ? touchX : sx(mouseX);
+  const py = isTouching ? touchY : sy(mouseY);
+  const dx = px - player.x;
+  const dy = py - player.y;
+  const d = dist(px, py, player.x, player.y);
 
   if (d > deadZone) {
-    dx = constrain(dx, -100, 100);
-    dy = constrain(dy, -100, 100);
+    const maxPointerSpeed = boosterActive ? 16 : 13;
+    const steer = isTouching ? 0.72 : 0.62;
+    const desiredSpeed = map(
+      constrain(d, deadZone, 260),
+      deadZone,
+      260,
+      0,
+      maxPointerSpeed
+    );
 
-    vx += dx * 0.01;
-    vy += dy * 0.01;
+    const desiredVx = (dx / d) * desiredSpeed;
+    const desiredVy = (dy / d) * desiredSpeed;
+
+    vx = lerp(vx, desiredVx, steer);
+    vy = lerp(vy, desiredVy, steer);
+  } else {
+    // Jarrutetaan heti kun osoitin on lähellä hahmoa.
+    vx *= 0.55;
+    vy *= 0.55;
   }
 }
 
   player.x += vx;
   player.y += vy;
 
-  vx = constrain(vx, -8, 8);
-  vy = constrain(vy, -8, 8);
+  const maxVelocity = boosterActive ? 16 : 13;
+  vx = constrain(vx, -maxVelocity, maxVelocity);
+  vy = constrain(vy, -maxVelocity, maxVelocity);
 
-  vx *= 0.9;
-  vy *= 0.9
+  const damping = pointerActive ? 0.98 : 0.88;
+  vx *= damping;
+  vy *= damping;
 
   player.x = constrain(player.x, 15, width - 15);
   player.y = constrain(player.y, 15, height - 15);
