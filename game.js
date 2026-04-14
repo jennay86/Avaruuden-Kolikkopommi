@@ -715,12 +715,16 @@ if (pointerActive) {
   const dy = py - player.y;
   const d = dist(px, py, player.x, player.y);
 
-  if (d > deadZone) {
-    const maxPointerSpeed = boosterActive ? 16 : 13;
-    const steer = isTouching ? 0.72 : 0.62;
+  const inputDeadZone = isTouching ? 12 : deadZone;
+
+  if (d > inputDeadZone) {
+    const maxPointerSpeed = isTouching
+      ? (boosterActive ? 19 : 15)
+      : (boosterActive ? 16 : 13);
+    const steer = isTouching ? 0.84 : 0.62;
     const desiredSpeed = map(
-      constrain(d, deadZone, 260),
-      deadZone,
+      constrain(d, inputDeadZone, 260),
+      inputDeadZone,
       260,
       0,
       maxPointerSpeed
@@ -745,7 +749,7 @@ if (pointerActive) {
   vx = constrain(vx, -maxVelocity, maxVelocity);
   vy = constrain(vy, -maxVelocity, maxVelocity);
 
-  const damping = pointerActive ? 0.98 : 0.88;
+  const damping = pointerActive ? (isTouching ? 0.99 : 0.98) : 0.88;
   vx *= damping;
   vy *= damping;
 
