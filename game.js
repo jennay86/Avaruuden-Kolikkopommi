@@ -1,4 +1,5 @@
 ﻿let player, coin;
+let canvasEl;
 let bombs = [];
 let particles = [];
 let stars = [];
@@ -53,18 +54,35 @@ let floatingTexts = [];
 let bgColor;
 
 function layoutMenuButtons() {
-  const centerX = width / 2 - 80;
+  const buttonWidth = constrain(floor(width * 0.42), 150, 220);
+  const buttonHeight = 45;
 
   if (startButton) {
-    startButton.position(centerX, height / 2 + 20);
+    startButton.size(buttonWidth, buttonHeight);
   }
 
   if (restartButton) {
-    restartButton.position(centerX, height / 2 + 180);
+    restartButton.size(buttonWidth, buttonHeight);
   }
 
   if (homeButton) {
-    homeButton.position(centerX, height / 2 + 240);
+    homeButton.size(buttonWidth, buttonHeight);
+  }
+
+  const startX = startButton ? width / 2 - startButton.elt.offsetWidth / 2 : width / 2 - buttonWidth / 2;
+  const restartX = restartButton ? width / 2 - restartButton.elt.offsetWidth / 2 : width / 2 - buttonWidth / 2;
+  const homeX = homeButton ? width / 2 - homeButton.elt.offsetWidth / 2 : width / 2 - buttonWidth / 2;
+
+  if (startButton) {
+    startButton.position(startX, height / 2 + 20);
+  }
+
+  if (restartButton) {
+    restartButton.position(restartX, height / 2 + 180);
+  }
+
+  if (homeButton) {
+    homeButton.position(homeX, height / 2 + 240);
   }
 }
 
@@ -128,7 +146,7 @@ function preload() {
 
 function setup() {
   
-  createCanvas(windowWidth, windowHeight);
+  canvasEl = createCanvas(windowWidth, windowHeight);
   updateScale();
   textFont('Orbitron');
   pixelDensity(1);
@@ -429,6 +447,10 @@ function mousePressed() {
 }
 
 function draw() {
+  if (canvasEl) {
+    const menuState = gameState === "start" || gameState === "gameover";
+    canvasEl.style('pointer-events', menuState ? 'none' : 'auto');
+  }
 
   
 // ✅ TAUSTA ENSIN – EI SKAALAUSTA
@@ -462,6 +484,11 @@ if (useScale) {
   }
 
   if (gameState === "start") {
+    layoutMenuButtons();
+    startButton.show();
+    restartButton.hide();
+    homeButton.hide();
+
     fill(255);
     textAlign(CENTER, CENTER);
     textSize(42);
@@ -544,6 +571,8 @@ pop();
   }
 
   if (gameState === "gameover") {
+    startButton.hide();
+
     stopSound(gameMusic);
     stopSound(tickingSound);
     stopSound(warningSound);
@@ -621,11 +650,12 @@ if (madeTop5) {
 
 // 5️⃣ UUSINTA-PAINIKE
 const buttonY = afterTop5Y + (madeTop5 ? 70 : 40);
+const buttonX = width / 2 - restartButton.elt.offsetWidth / 2;
 
-restartButton.position(width / 2 - 80, buttonY);
+restartButton.position(buttonX, buttonY);
 restartButton.show();
 
-homeButton.position(width / 2 - 80, buttonY + 60);
+homeButton.position(buttonX, buttonY + 60);
 homeButton.show();
 
 
@@ -633,6 +663,10 @@ homeButton.show();
 return;
 
   }
+
+  startButton.hide();
+  restartButton.hide();
+  homeButton.hide();
 
   if (keyIsDown(LEFT_ARROW) ||
     (isTouching && touchX < player.x - deadZone)) {
