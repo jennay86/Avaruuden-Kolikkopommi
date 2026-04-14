@@ -52,13 +52,28 @@ let floatingTexts = [];
 
 let bgColor;
 
+function layoutMenuButtons() {
+  const centerX = width / 2 - 80;
+
+  if (startButton) {
+    startButton.position(centerX, height / 2 + 20);
+  }
+
+  if (restartButton) {
+    restartButton.position(centerX, height / 2 + 180);
+  }
+
+  if (homeButton) {
+    homeButton.position(centerX, height / 2 + 240);
+  }
+}
+
 
 function updateScale() {
-  scaleFactor = min(
-    windowWidth / BASE_WIDTH,
-    windowHeight / BASE_HEIGHT
-  );
-  useScale = min(windowWidth / BASE_WIDTH, windowHeight / BASE_HEIGHT) < 0.95;
+  // Piirretään aina suoraan canvasin omilla koordinaateilla.
+  // Aiempi ylimääräinen skaalakerros aiheutti mobiilissa keskitysvirheitä.
+  scaleFactor = 1;
+  useScale = false;
 }
 
 
@@ -75,6 +90,7 @@ function sy(y) {
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   updateScale();
+  layoutMenuButtons();
 }
 
 
@@ -144,22 +160,25 @@ bgColor = color(10, 15, 40);        // alkuperäinen tumma sininen
   }
   
   startButton = createButton("Aloita peli");
-  startButton.position(width/2 - 80, height/2 + 20);
   startButton.size(160, 45);
   startButton.mousePressed(startGame);
+  startButton.touchStarted(startGame);
 
   restartButton = createButton("Uudelleen");
-  restartButton.position(width/2 - 80, height/2 + 180);
   restartButton.size(160, 45);
   restartButton.mousePressed(startGame);
+  restartButton.touchStarted(startGame);
   restartButton.hide();
 
   
 homeButton = createButton("Alkuun");
 homeButton.size(160, 45);
 homeButton.mousePressed(goToStart);
+homeButton.touchStarted(goToStart);
 
 homeButton.hide();
+
+  layoutMenuButtons();
 
 
   highScores = getItem('highScores') || [];
@@ -213,21 +232,26 @@ function touchStarted() {
     touchX = sx(mouseX);
     touchY = sy(mouseY);
     isTouching = true;
+    return false;
   }
-  return false;
+  return true;
 }
 
 function touchMoved() {
   if (gameState === "play" && isTouching) {
     touchX = sx(mouseX);
     touchY = sy(mouseY);
+    return false;
   }
-  return false;
+  return true;
 }
 
 function touchEnded() {
-  isTouching = false;
-  return false;
+  if (gameState === "play") {
+    isTouching = false;
+    return false;
+  }
+  return true;
 }
 
 function startGame() {
@@ -596,16 +620,12 @@ if (madeTop5) {
 }
 
 // 5️⃣ UUSINTA-PAINIKE
-restartButton.position(
-  width / 2 - 80,
-  afterTop5Y + (madeTop5 ? 70 : 40)
-);
+const buttonY = afterTop5Y + (madeTop5 ? 70 : 40);
+
+restartButton.position(width / 2 - 80, buttonY);
 restartButton.show();
 
-homeButton.position(
-  width / 2 - 80,
-  restartButton.position().y + 60
-);
+homeButton.position(width / 2 - 80, buttonY + 60);
 homeButton.show();
 
 
