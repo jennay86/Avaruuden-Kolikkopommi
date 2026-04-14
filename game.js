@@ -491,7 +491,7 @@ if (useScale) {
 
     const compactStartLayout = width < 900 || height < 700;
     const titleSize = constrain(floor(width * 0.06), 28, 42);
-    const helpSize = constrain(floor(width * 0.028), 14, 22);
+    const helpSize = constrain(floor(width * 0.027), 12, 20);
     const helpWidth = min(width * 0.86, 760);
 
     fill(255);
@@ -538,15 +538,17 @@ text(
 + "Saat boostereista lisää tehoa ja suojan.\n"
 + "Pommien läheltä saat bonuspisteitä.",
   width / 2 - helpWidth / 2,
-  compactStartLayout ? height * 0.33 : height * 0.36,
-  helpWidth,
-  compactStartLayout ? height * 0.24 : height * 0.2
+  compactStartLayout ? height * 0.31 : height * 0.35,
+  helpWidth
 );
 
 
     // ✨ hehku
 const coinPreviewY = compactStartLayout ? height * 0.6 : height / 2 + 110;
 glow(width/2, coinPreviewY, 15, color(255, 200, 0));
+
+const startButtonY = min(height - 70, coinPreviewY + 55);
+startButton.position(width / 2 - startButton.elt.offsetWidth / 2, startButtonY);
 
 // 🪙 sama kolikko kuin pelissä
 push();
