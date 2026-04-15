@@ -1,6 +1,8 @@
 # Vibe Coding - Peli ja tekoälyapuri
 
-Tässä vaiheessa oppilaat käyttävät ChatGPT:tä (tai koulun tekoälyä) ja pyytävät tekoälyä muokkaamaan peliä. Näin harjoitellaan tekoälyn hyödyntämistä ohjelmoinnissa.
+Tämä on ensimmäinen pelin muokkaukseni ja sen avulla harjoittelin tekoälyn hyödyntämistä ohjelmoinnissa. Pyysin tekoälyä muokkaamaan peliä. Käytin ChatGPT:tä, Copilotia ja GitHubia.
+
+Ohjeistus oli tällainen:
 
 **Toimi näin:**
 1. Avaa pelin koodi (game.js) ja ChatGPT (tai koulun tekoäly).
@@ -21,3 +23,9 @@ Tässä vaiheessa oppilaat käyttävät ChatGPT:tä (tai koulun tekoälyä) ja p
 
 > Tee kolikosta ‘pommi’ joka vähentää pisteitä, jos kosken siihen. Pommi ilmestyy välillä satunnaisesti.
 
+
+Peliä sai lisäksi muokata vapaasti.
+
+Toteutin prompti A:n sellaisenaan. Prompti B:n toteutin niin, että aika on 60 s. Prompti C:n toteutin lisäämällä pommeja. Näiden lisäksi tein paljon muitakin muutoksia ja sain pelin toimimaan sekä tietokoneessa että mobiilissa. Tekoäly oli hyvin vahvasti apunani, koska en tiedä koodauksesta juurikaan mitään.
+
+Alkuperäinen koodi löytyy osoitteesta https://github.com/purotu/vibe-coding.
