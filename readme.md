@@ -1,5 +1,7 @@
 # Vibe Coding - Peli ja tekoälyapuri
 
+Peli löytyy osoitteesta https://jennay86.github.io/Avaruuden-Kolikkopommi/
+
 Tämä on ensimmäinen pelin muokkaukseni ja sen avulla harjoittelin tekoälyn hyödyntämistä ohjelmoinnissa. Pyysin tekoälyä muokkaamaan peliä. Käytin ChatGPT:tä, Copilotia ja GitHubia.
 
 Ohjeistus oli tällainen:
